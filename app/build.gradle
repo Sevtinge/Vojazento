@@ -2,9 +2,16 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+static def getGitHash() {
+    def process = "git rev-parse HEAD".execute()
+    process.in.text.trim()
+}
+
 android {
     namespace 'com.sevtinge.vojazento'
     compileSdk 34
+
+    def gitHash = getGitHash()
 
     defaultConfig {
         applicationId "com.sevtinge.vojazento"
@@ -19,8 +26,10 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            android.buildFeatures.buildConfig true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             versionNameSuffix "_" + java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd").format(java.time.LocalDateTime.now())
+            buildConfigField "String", "GIT_HASH", "\"${gitHash}\""
         }
     }
     compileOptions {

@@ -29,7 +29,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class XposedInit implements IXposedHookLoadPackage {
 
-    boolean IS_CHINA_MAINLAND_BUILD = false;
+    boolean IS_CHINA_MAINLAND_BUILD = true;
 
     int ERROR_COUNTER = 0;
 
@@ -101,6 +101,37 @@ public class XposedInit implements IXposedHookLoadPackage {
         } catch (Throwable t) {
             ERROR_COUNTER = ERROR_COUNTER + 1;
             XposedLogUtils.logE(lpparam.packageName, "A problem occurred hook \"miuix.core.util.SystemProperties.get(String, String)\":" + t);
+        }
+        try {
+            XposedHelpers.findAndHookMethod(XposedHelpers.findClassIfExists("miui.os.Build", lpparam.classLoader), "getRegion", new XC_MethodHook() {  //miuix设备名称中是否包含国际版标识
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    if (!IS_CHINA_MAINLAND_BUILD) {
+                        param.setResult("GL");
+                    } else {
+                        param.setResult("CN");
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            ERROR_COUNTER = ERROR_COUNTER + 1;
+            XposedLogUtils.logE(lpparam.packageName, "A problem occurred hook \"miui.os.Build.getRegion()\":" + t);
+        }
+        try {
+            XposedHelpers.findAndHookMethod(XposedHelpers.findClassIfExists("miui.os.Build", lpparam.classLoader), "checkRegion", String.class, new XC_MethodHook() {  //miuix设备名称中是否包含国际版标识
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    String REGION = (String) param.args[0];
+                    if (!REGION.equals("CN") && IS_CHINA_MAINLAND_BUILD) {
+                        param.setResult(true);
+                    } else if (REGION.contains("CN") && !IS_CHINA_MAINLAND_BUILD) {
+                        param.setResult(false);
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            ERROR_COUNTER = ERROR_COUNTER + 1;
+            XposedLogUtils.logE(lpparam.packageName, "A problem occurred hook \"miui.os.Build.checkRegion(String)\":" + t);
         }
         XposedLogUtils.logI(lpparam.packageName, "Hook over with " + ERROR_COUNTER + " error(s).");
     }

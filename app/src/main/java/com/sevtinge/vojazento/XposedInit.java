@@ -29,7 +29,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class XposedInit implements IXposedHookLoadPackage {
 
-    boolean IS_CHINA_MAINLAND_BUILD = true;
+    boolean IS_CHINA_MAINLAND_BUILD = false;
 
     int ERROR_COUNTER = 0;
 
@@ -69,13 +69,20 @@ public class XposedInit implements IXposedHookLoadPackage {
         try {
             XposedHelpers.findAndHookMethod(XposedHelpers.findClassIfExists("android.os.SystemProperties", lpparam.classLoader), "get", String.class, String.class, new XC_MethodHook() { //设备名称中是否包含国际版标识
                 @Override
-                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                    String RETURN = (String) param.args[1];
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    String RETURN = (String) param.getResult();
                     if (param.args[0].equals("ro.product.mod_device")) {
-                        if (RETURN.contains("_global") && IS_CHINA_MAINLAND_BUILD) {
-                            param.args[1] = RETURN.replace("_global", "");
+                        if ((RETURN.contains("_global") || RETURN.contains("_tw") || RETURN.contains("_hk") || RETURN.contains("_sg") || RETURN.contains("_in") || RETURN.contains("_id") || RETURN.contains("_eu")) && IS_CHINA_MAINLAND_BUILD) {
+                            RETURN = RETURN.replace("_global", "");
+                            RETURN = RETURN.replace("_tw", "");
+                            RETURN = RETURN.replace("_hk", "");
+                            RETURN = RETURN.replace("_sg", "");
+                            RETURN = RETURN.replace("_id", "");
+                            RETURN = RETURN.replace("_in", "");
+                            RETURN = RETURN.replace("_eu", "");
+                            param.setResult(RETURN);
                         } else if (!RETURN.contains("_global") && !IS_CHINA_MAINLAND_BUILD) {
-                            param.args[1] = param.args[1] + "_global";
+                            param.setResult(param.args[1] + "_global");
                         }
                     }
                 }
@@ -87,13 +94,20 @@ public class XposedInit implements IXposedHookLoadPackage {
         try {
             XposedHelpers.findAndHookMethod(XposedHelpers.findClassIfExists("miuix.core.util.SystemProperties", lpparam.classLoader), "get", String.class, String.class, new XC_MethodHook() {  //miuix设备名称中是否包含国际版标识
                 @Override
-                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                    String RETURN = (String) param.args[1];
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    String RETURN = (String) param.getResult();
                     if (param.args[0].equals("ro.product.mod_device")) {
-                        if (RETURN.contains("_global") && IS_CHINA_MAINLAND_BUILD) {
-                            param.args[1] = RETURN.replace("_global", "");
+                        if ((RETURN.contains("_global") || RETURN.contains("_tw") || RETURN.contains("_hk") || RETURN.contains("_sg") || RETURN.contains("_in") || RETURN.contains("_id") || RETURN.contains("_eu")) && IS_CHINA_MAINLAND_BUILD) {
+                            RETURN = RETURN.replace("_global", "");
+                            RETURN = RETURN.replace("_tw", "");
+                            RETURN = RETURN.replace("_hk", "");
+                            RETURN = RETURN.replace("_sg", "");
+                            RETURN = RETURN.replace("_id", "");
+                            RETURN = RETURN.replace("_in", "");
+                            RETURN = RETURN.replace("_eu", "");
+                            param.setResult(RETURN);
                         } else if (!RETURN.contains("_global") && !IS_CHINA_MAINLAND_BUILD) {
-                            param.args[1] = param.args[1] + "_global";
+                            param.setResult(param.args[1] + "_global");
                         }
                     }
                 }
@@ -134,5 +148,6 @@ public class XposedInit implements IXposedHookLoadPackage {
             XposedLogUtils.logE(lpparam.packageName, "A problem occurred hook \"miui.os.Build.checkRegion(String)\":" + t);
         }
         XposedLogUtils.logI(lpparam.packageName, "Hook over with " + ERROR_COUNTER + " error(s).");
+        ERROR_COUNTER = 0;
     }
 }

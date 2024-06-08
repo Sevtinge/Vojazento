@@ -39,7 +39,6 @@ android {
 }
 
 dependencies {
-    
+    testImplementation 'junit:junit:4.13.2'
     compileOnly 'de.robv.android.xposed:api:82'
-
 }
